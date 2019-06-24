@@ -1,20 +1,7 @@
-
-
-# 详情url
-# https://www.wehaowu.com/api/java/cms/show/content/v1.2.0
-# https://www.wehaowu.com/api/java/cms/show/content/v1.2.0
-
-# {"token":"Cf0Illlv-aQUYTHqkLix2Zzd7NA8Na8woOCQgjUYX6pM_LL3xTRp9H2PUofzgsapj8kuQNTvX-177zlmC_LGh7xilGwmnbQdbpxzpdwXSoPzPLMYh-3cbIdkbqBP_iHnJvCksC3Plr5qkvXtx00SG_hidncGABNS9GzrUqi9yOE=","app_scope":"ycp","platform":"mp","version":"1.4.0","content_id":"15602516829778232"}
-# {"token":"Cf0Illlv-aQUYTHqkLix2Zzd7NA8Na8woOCQgjUYX6pM_LL3xTRp9H2PUofzgsapj8kuQNTvX-177zlmC_LGh7xilGwmnbQdbpxzpdwXSoPzPLMYh-3cbIdkbqBP_iHnJvCksC3Plr5qkvXtx00SG_hidncGABNS9GzrUqi9yOE=","app_scope":"ycp","platform":"mp","version":"1.4.0","content_id":"15597343151639824"}
-# 图文
-# {"token":"iBcjPaEWChzTnYRbaYqMHO0vYVAJlZT7A1e3awPrMHgLCRZ2GsfMtUqVgfuvjJ6PVN11T4osyvLd6fd2B4Xsk7uinRucGM1gFGT38nWvvniWa3iq29cTCe7klT9HwBSUeu2-ecE8vXGLmBUqOt4kWRERpfvyBFeYfpBnq4_RuwI=","app_scope":"ycp","platform":"mp","version":"1.4.0","content_id":"15605711315344813"}
-
-
-#  瀑布url
-# {"token":"Cf0Illlv-aQUYTHqkLix2Zzd7NA8Na8woOCQgjUYX6pM_LL3xTRp9H2PUofzgsapj8kuQNTvX-177zlmC_LGh7xilGwmnbQdbpxzpdwXSoPzPLMYh-3cbIdkbqBP_iHnJvCksC3Plr5qkvXtx00SG_hidncGABNS9GzrUqi9yOE=","app_scope":"ycp","platform":"mp","version":"1.4.0","page":0,"page_size":8,"offset":3}
-# {"token":"Cf0Illlv-aQUYTHqkLix2Zzd7NA8Na8woOCQgjUYX6pM_LL3xTRp9H2PUofzgsapj8kuQNTvX-177zlmC_LGh7xilGwmnbQdbpxzpdwXSoPzPLMYh-3cbIdkbqBP_iHnJvCksC3Plr5qkvXtx00SG_hidncGABNS9GzrUqi9yOE=","app_scope":"ycp","platform":"mp","version":"1.4.0","page":0,"page_size":8,"offset":4}
-
-
+# 
+# 有草坪视频内容&图文内容
+# 
+# 
 import  requests
 import json
 import hashlib
@@ -199,11 +186,4 @@ def main():
 
 
 if __name__ == "__main__":
-    # data = get_pageInfo(1)
-    # parse_pageInfo(data)
-    # for id in ['15602516829778232', '15487615509035427', '15451995143072066', '15451997944805642', '15600965315474419', '15525417041888503', '15541966555930281', '15451990479642824']:
-    #
-    #     get_contentInfo(id)
-
-    # get_contentInfo(15605711315344813)
     main()
