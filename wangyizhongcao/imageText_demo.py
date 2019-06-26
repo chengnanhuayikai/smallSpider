@@ -60,7 +60,11 @@ def get_info(url):
 
     items = json.loads(items)
     resourceContent = json.loads(temp)
-
+    cellType_list = [cell_type.get('cellType') for cell_type in  resourceContent]
+    # print(cellType_list)
+    if 8 in cellType_list or 9 in cellType_list:
+        print('----------   pass --------------')
+        return  None
     print(items)
     print(resourceContent)
 
