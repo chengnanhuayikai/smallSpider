@@ -1,8 +1,8 @@
-# 
+#
 # 有草坪视频内容&图文内容
-# 
-# 
-import  requests
+#
+#
+import requests
 import json
 import hashlib
 
@@ -17,6 +17,7 @@ headers = {"Host": "www.wehaowu.com",
            "Referer": "https://servicewechat.com/wx97fb0f2ee9b2413e/28/page-frame.html",
            "Content-Type": "application/json"
            }
+
 
 def upload(data):
     dataList = {
@@ -42,22 +43,25 @@ def upload(data):
     # print(dataList)
     return res
 
+
 def data_md5(data):
     return hashlib.md5(data.encode()).hexdigest()
 
+
 def get_pageInfo(offset):
     page_url = 'https://www.wehaowu.com/api/java/cms/homepage/list/content/v1.4.1'
-    data = {"token":"Cf0Illlv-aQUYTHqkLix2Zzd7NA8Na8woOCQgjUYX6pM_LL3xTRp9H2PUofzgsapj8kuQNTvX-177zlmC_LGh7xilGwmnbQdbpxzpdwXSoPzPLMYh-3cbIdkbqBP_iHnJvCksC3Plr5qkvXtx00SG_hidncGABNS9GzrUqi9yOE=",
-            "app_scope":"ycp",
-            "platform":"mp",
-            "version":"1.4.0",
-            "page":0,
-            "page_size":8,
-            "offset":offset}
+    data = {"token": "Cf0Illlv-aQUYTHqkLix2Zzd7NA8Na8woOCQgjUYX6pM_LL3xTRp9H2PUofzgsapj8kuQNTvX-177zlmC_LGh7xilGwmnbQdbpxzpdwXSoPzPLMYh-3cbIdkbqBP_iHnJvCksC3Plr5qkvXtx00SG_hidncGABNS9GzrUqi9yOE=",
+            "app_scope": "ycp",
+            "platform": "mp",
+            "version": "1.4.0",
+            "page": 0,
+            "page_size": 8,
+            "offset": offset}
 
-    res = requests.post(url=page_url,headers=headers,data=json.dumps(data))
+    res = requests.post(url=page_url, headers=headers, data=json.dumps(data))
     # print(res.text)
-    return  json.loads(res.text)
+    return json.loads(res.text)
+
 
 def parse_pageInfo(data):
     for item in data.get('data').get('home_page_contents'):
@@ -65,28 +69,30 @@ def parse_pageInfo(data):
     # print(content_id_list)
 
 
-
 def get_contentInfo(content_id):
     content_url = 'https://www.wehaowu.com/api/java/cms/show/content/v1.2.0'
     data = {
-        "token":"Cf0Illlv-aQUYTHqkLix2Zzd7NA8Na8woOCQgjUYX6pM_LL3xTRp9H2PUofzgsapj8kuQNTvX-177zlmC_LGh7xilGwmnbQdbpxzpdwXSoPzPLMYh-3cbIdkbqBP_iHnJvCksC3Plr5qkvXtx00SG_hidncGABNS9GzrUqi9yOE=",
-        "app_scope":"ycp",
-        "platform":"mp",
-        "version":"1.4.0",
-        "content_id":content_id
+        "token": "Cf0Illlv-aQUYTHqkLix2Zzd7NA8Na8woOCQgjUYX6pM_LL3xTRp9H2PUofzgsapj8kuQNTvX-177zlmC_LGh7xilGwmnbQdbpxzpdwXSoPzPLMYh-3cbIdkbqBP_iHnJvCksC3Plr5qkvXtx00SG_hidncGABNS9GzrUqi9yOE=",
+        "app_scope": "ycp",
+        "platform": "mp",
+        "version": "1.4.0",
+        "content_id": content_id
     }
-    res = requests.post(url=content_url,headers=headers,data=json.dumps(data))
+    res = requests.post(url=content_url, headers=headers,
+                        data=json.dumps(data))
     # print(res.text)
     content_info = json.loads(res.text).get('data').get('content')
     # 视频内容
-    if content_info.get('content_type') ==  "VDO":
+    if content_info.get('content_type') == "VDO":
         resourceTitle = content_info.get('title')
         resourcePlatform = 'ycp#video'
-        resourceId = 'ycp_' +  data_md5(resourceTitle)
+        resourceId = 'ycp_' + data_md5(resourceTitle)
         video_url = json.loads(content_info.get('content')).get('video_url')
         goods_dict = {}
-        goods_dict['goods_name'] = content_info.get('linked_series')[0].get('series_name')
-        goods_dict['goods_price'] = [ content_info.get('linked_series')[0].get('first_pic') ]
+        goods_dict['goods_name'] = content_info.get(
+            'linked_series')[0].get('series_name')
+        goods_dict['goods_price'] = [content_info.get('linked_series')[
+            0].get('first_pic')]
         # print(goods_dict['goods_name'])
 
         info = {
@@ -102,7 +108,7 @@ def get_contentInfo(content_id):
                         # 图片
                         "image": [],
                         # 视频
-                        "video": [ video_url ]
+                        "video": [video_url]
                     },
                     "goods_info": [
                         goods_dict
@@ -110,7 +116,6 @@ def get_contentInfo(content_id):
                 }
             ]
         }
-
 
         print(info)
         res = upload(info)
@@ -121,15 +126,17 @@ def get_contentInfo(content_id):
     if content_info.get('content_type') == "IMG":
         resourceTitle = content_info.get('title')
         resourcePlatform = 'ycp#mixrow'
-        resourceId = 'ycp_' +  data_md5(resourceTitle)
+        resourceId = 'ycp_' + data_md5(resourceTitle)
         resourceContent = json.loads(content_info.get('content')).get('ops')
         # print(resourceContent)
         # for  item in resourceContent:
         #     print(item)
         image = content_info.get('first_pic')
         goods_dict = {}
-        goods_dict['goods_name'] = content_info.get('linked_series')[0].get('series_name')
-        goods_dict['goods_price'] = [ content_info.get('linked_series')[0].get('first_pic') ]
+        goods_dict['goods_name'] = content_info.get(
+            'linked_series')[0].get('series_name')
+        goods_dict['goods_price'] = [content_info.get('linked_series')[
+            0].get('first_pic')]
 
         info = {
             "dataType": 1,
@@ -138,14 +145,14 @@ def get_contentInfo(content_id):
 
                     "resourceId": resourceId,  # 资源唯一ID
                     "resourceTitle": resourceTitle,  # 文章标题
-                    "resourceContent":resourceContent, # 图文混排数组
+                    "resourceContent": resourceContent,  # 图文混排数组
                     "resourcePlatform": resourcePlatform,  # 来源
                     "resourceTag": "推广资源",
                     "resourceInfo": {
                         # 图片
                         "image": [image],
                         # 视频
-                        "video": [ ]
+                        "video": []
                     },
                     "goods_info": [
                         goods_dict
@@ -160,15 +167,13 @@ def get_contentInfo(content_id):
         return 2
 
 
-
-
 def main():
-    global  image_text_num
-    global  video_num
-    for offset in range(1,21):
+    global image_text_num
+    global video_num
+    for offset in range(1, 21):
         data = get_pageInfo(offset)
         parse_pageInfo(data)
-    for id in content_id_list :
+    for id in content_id_list:
         num = get_contentInfo(id)
         if num == 1:
             print('---------- >>> video_num:', video_num)
@@ -178,11 +183,6 @@ def main():
             print('---------- >>> image_text_num:', image_text_num)
             image_text_num += 1
             print()
-
-
-
-
-
 
 
 if __name__ == "__main__":
