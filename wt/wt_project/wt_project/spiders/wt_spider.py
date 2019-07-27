@@ -22,6 +22,14 @@ class WtSpiderSpider(scrapy.Spider):
     appKey = '12574478'
     contentId_list = []
 
+
+    wt_p_1 = 0  # 无外链聚合内容
+    wt_w_1 = 0  # 无外链混排内容
+    wt_p_2 = 0  # 有外链聚合内容
+    wt_w_2 = 0  # 有外链混排内容
+    wt_v_1 = 0  # 无外链视频内容
+    wt_v_2 = 0  # 有外链视频内容
+
     def setHeaders(self,html=None):
         '''
         设置headers
@@ -78,6 +86,17 @@ class WtSpiderSpider(scrapy.Spider):
                     content_dict['image'] = content.get('images')
                     content_dict['contentId'] = content.get('feedId')
                     content_dict['feedCount'] = content.get('feedCount')
+                    content_dict['contentType'] = 'Text'
+                    self.contentId_list.append(content_dict)
+
+
+                if content.get("feedType") == '506':
+                    content_dict = {}
+                    content_dict['image'] = content.get('images')
+                    content_dict['contentId'] = content.get('feedId')
+                    content_dict['feedCount'] = content.get('feedCount')
+                    content_dict['contentType'] = 'Video'
+                    # print(content_dict)
                     self.contentId_list.append(content_dict)
 
 
@@ -133,12 +152,12 @@ class WtSpiderSpider(scrapy.Spider):
         flag = True
         page = 1
         while flag:
-            if page > 300:
+            if page > 100:
                 break
             info = self.get_accountIdPage(accountId,page)
             flag = self.get_parseAccountIdPage(info)
             page += 1
-            break
+            # break
 
 
     def get_detailsSign(self,contentId):
@@ -160,7 +179,7 @@ class WtSpiderSpider(scrapy.Spider):
         return  details_sign
 
 
-    def get_contentIdUrl(self,contentId):
+    def get_contentIdUrl(self,contentId,contentType):
         '''
         根据contentId 生成url
         :param contentId:
@@ -181,7 +200,7 @@ class WtSpiderSpider(scrapy.Spider):
             'x-ttid': '10005934@taobao_android_8.7.0',
             'x-utdid': utdid,
             'x-devid': 'Q8rmBiZW4hbKClMaYgGo0vnNkTXVc3AELqO9d7xp61sH',
-            'x-uid': 'Q8rmBiZW4hbKClMaYgGo0vnNkTXVc3AELqO9d7xp61sH'
+            'x-uid': ''
         }
 
         url = 'https://api.m.taobao.com/gw/mtop.taobao.beehive.detail.contentservicenewv2/1.0/?data=' + parse.quote(
@@ -250,12 +269,15 @@ class WtSpiderSpider(scrapy.Spider):
             self.get_allPage(accountId)
 
         for content_dict in self.contentId_list :
-            print(content_dict.get('contentId'))
-            url,headers = self.get_contentIdUrl(content_dict.get('contentId'))
+
+            if content_dict.get('contentType') == 'Text':
+                url,headers = self.get_contentIdUrl(content_dict.get('contentId'),'Text')
+            if content_dict.get('contentType') == 'Video':
+                url, headers = self.get_contentIdUrl(content_dict.get('contentId'), 'Video')
             yield scrapy.Request(url=url, meta={'content_dict': content_dict}, callback=self.parse_deatilsInfo,
                                  headers=headers)
 
-            break
+            # break
 
 
 
@@ -265,7 +287,7 @@ class WtSpiderSpider(scrapy.Spider):
         :param response:
         :return:
         '''
-
+        contentInfo_dict = response.request.meta.get('content_dict')
         info = json.loads(response.text)
         content = info.get('data').get('models').get('content')
         tags = info.get('data').get('models').get('tags')
@@ -273,8 +295,8 @@ class WtSpiderSpider(scrapy.Spider):
             tags = []
         else:
             tags = [tag.get('name') for tag in tags]
+
         drawerList = content.get('drawerList')
-        richText = content.get('richText')
         gmtCreate = content.get('gmtCreate')
         resourceTitle = content.get('title')
         resourceLink = content.get('detailUrl')
@@ -300,71 +322,152 @@ class WtSpiderSpider(scrapy.Spider):
             "userPic": userPic
         }
 
-        # 无商品外链内容
-        if drawerList == [] or drawerList == None:
-            # 聚合内容
-            if richText == [] or richText == None:
-                resourceContent = content.get('summary')
-                resourcePlatform = 'wt$polymerization'
 
-            # 混排内容
+        # 解析图文内容
+        if contentInfo_dict.get('contentType') == 'Text':
+            richText = content.get('richText')
+            # 无商品外链内容
+            if drawerList == [] or drawerList == None:
+                # 聚合内容
+                if richText == [] or richText == None:
+                    resourceContent = content.get('summary')
+                    resourcePlatform = 'wt$polymerization'
+
+                    self.wt_p_1 += 1
+
+                # 混排内容
+                else:
+                    summary = content.get('summary')
+                    summary_temp = {
+                        'resource': [
+                            {
+                                'entityType': 'ResourceText',
+                                'text': summary
+                            }
+                        ]
+                    }
+
+                    richText.insert(0, summary_temp)
+                    resourceContent = self.change_resourceContent(richText)
+                    resourcePlatform = 'wt$mixrow'
+
+                    self.wt_w_1 += 1
+
+
+
+
+            # 有商品外链内容
             else:
-                summary = content.get('summary')
-                summary_temp = {
-                    'resource': [
+                for temp in drawerList:
+                    goods_info_dict = {}
+                    goods_info_dict['goods_name'] = temp.get('itemTitle')
+                    goods_info_dict['goods_url'] = 'http:' + temp.get('itemUrl')
+                    if temp.get('item_pic') == None:
+                        goods_info_dict['goods_pic'] = ''
+                    else:
+                        goods_info_dict['goods_pic'] = 'http:' + temp.get('item_pic')
+
+                    if temp.get('itemPriceDTO') == None:
+                        goods_info_dict['goods_price'] = ''
+                    else:
+                        goods_info_dict['goods_price'] = temp.get('itemPriceDTO').get('price').get('item_current_price')
+                    goods_info_dict['goods_id'] = temp.get('itemId')
+                    goods_info_list.append(goods_info_dict)
+                # 聚合内容
+                if richText == [] or richText == None:
+                    resourceContent = content.get('summary')
+                    resourcePlatform = 'wt#polymerization'
+
+                    self.wt_p_2 += 1
+
+                else:
+                    summary = content.get("summary")
+                    summary_temp = {
+                        "resource": [
+                            {
+                                "entityType": "ResourceText",
+                                "text": summary
+                            }
+                        ]
+                    }
+
+                    richText.insert(0, summary_temp)
+                    resourceContent = self.change_resourceContent(richText)
+                    resourcePlatform = 'wt#mixrow'
+
+                    self.wt_w_2 += 1
+
+
+            data = {
+                    "dataType": 1,
+                    "resources": [
                         {
-                            'entityType': 'ResourceText',
-                            'text': summary
+
+                            "resourceId": resourceId,  # 资源唯一ID
+                            "resourceTitle": resourceTitle,  # 文章标题
+                            "resourceContent": resourceContent,  # 文章内容
+                            "userInfo": userInfo,
+                            "gmtCreate": gmtCreate,
+                            "tags": tags,
+                            "resourceLink": resourceLink,  # 文章链接
+                            "resourcePlatform": resourcePlatform,  # 来源
+                            "resourceTag": resourceTag,
+                            "resourceInfo": {
+                                # 图片
+                                "image": '',
+                                # 视频
+                                "video": []
+                            },
+                            "goods_info": goods_info_list
                         }
                     ]
                 }
 
-                richText.insert(0, summary_temp)
-                resourceContent = self.change_resourceContent(richText)
-                resourcePlatform = 'wt$mixrow'
+
+            image = ['http:' + image_url for image_url in contentInfo_dict.get('image')]
+            data.get('resources')[0].get('resourceInfo')['image'] = image
+            data.get('resources')[0]['praiseCount'] = contentInfo_dict.get('feedCount').get('praiseCount')
+            data.get('resources')[0]['viewCount'] = contentInfo_dict.get('feedCount').get('viewCount')
+
+            # print(json.dumps(data))
+            item = WtProjectItem()
+            item['data'] = data
+
+            yield  item
 
 
-
-
-        # 有商品外链内容
-        else:
-            for temp in drawerList:
-                goods_info_dict = {}
-                goods_info_dict['goods_name'] = temp.get('itemTitle')
-                goods_info_dict['goods_url'] = 'http:' + temp.get('itemUrl')
-                if temp.get('item_pic') == None:
-                    goods_info_dict['goods_pic'] = ''
-                else:
-                    goods_info_dict['goods_pic'] = 'http:' + temp.get('item_pic')
-
-                if temp.get('itemPriceDTO') == None:
-                    goods_info_dict['goods_price'] = ''
-                else:
-                    goods_info_dict['goods_price'] = temp.get('itemPriceDTO').get('price').get('item_current_price')
-                goods_info_dict['goods_id'] = temp.get('itemId')
-                goods_info_list.append(goods_info_dict)
-            # 聚合内容
-            if richText == [] or richText == None:
-                resourceContent = content.get('summary')
-                resourcePlatform = 'wt#polymerization'
-
+        # 解析视频内容
+        if contentInfo_dict.get('contentType') == 'Video':
+            resourceContent = content.get('summary')
+            videoUrl = content.get('video').get('videoUrl')
+            videoInfo = {
+                "videoHeight": content.get('video').get('height'),
+                "videoWidth": content.get('video').get('width'),
+                "videoUrl": videoUrl
+            }
+            if drawerList == [] or drawerList == None:
+                resourcePlatform = 'wt$video'
+                self.wt_v_1 += 1
             else:
-                summary = content.get("summary")
-                summary_temp = {
-                    "resource": [
-                        {
-                            "entityType": "ResourceText",
-                            "text": summary
-                        }
-                    ]
-                }
+                for temp in drawerList:
+                    goods_info_dict = {}
+                    goods_info_dict['goods_name'] = temp.get('itemTitle')
+                    goods_info_dict['goods_url'] = 'http:' + temp.get('itemUrl')
+                    if temp.get('item_pic') == None:
+                        goods_info_dict['goods_pic'] = ''
+                    else:
+                        goods_info_dict['goods_pic'] = 'http:' + temp.get('item_pic')
 
-                richText.insert(0, summary_temp)
-                resourceContent = self.change_resourceContent(richText)
-                resourcePlatform = 'wt#mixrow'
+                    if temp.get('itemPriceDTO') == None:
+                        goods_info_dict['goods_price'] = ''
+                    else:
+                        goods_info_dict['goods_price'] = temp.get('itemPriceDTO').get('price').get('item_current_price')
+                    goods_info_dict['goods_id'] = temp.get('itemId')
+                    goods_info_list.append(goods_info_dict)
+                resourcePlatform = 'wt#video'
+                self.wt_v_2 += 1
 
-
-        data = {
+            data = {
                 "dataType": 1,
                 "resources": [
                     {
@@ -378,26 +481,29 @@ class WtSpiderSpider(scrapy.Spider):
                         "resourceLink": resourceLink,  # 文章链接
                         "resourcePlatform": resourcePlatform,  # 来源
                         "resourceTag": resourceTag,
+                        "videoInfo": videoInfo,
                         "resourceInfo": {
                             # 图片
                             "image": '',
                             # 视频
-                            "video": []
+                            "video": [videoUrl]
                         },
                         "goods_info": goods_info_list
                     }
                 ]
             }
 
-        contentInfo_dict = response.request.meta.get('content_dict')
-        image = ['http:' + image_url for image_url in contentInfo_dict.get('image')]
-        data.get('resources')[0].get('resourceInfo')['image'] = image
-        data.get('resources')[0]['praiseCount'] = contentInfo_dict.get('feedCount').get('praiseCount')
-        data.get('resources')[0]['viewCount'] = contentInfo_dict.get('feedCount').get('viewCount')
+            data.get('resources')[0].get('resourceInfo')['image'] = image = ['http:' + image_url for image_url in contentInfo_dict.get('image')]
+            data.get('resources')[0]['commentCount'] = contentInfo_dict.get('feedCount').get('commentCount')
+            data.get('resources')[0]['praiseCount'] = contentInfo_dict.get('feedCount').get('praiseCount')
+            data.get('resources')[0]['viewCount'] = contentInfo_dict.get('feedCount').get('viewCount')
 
-        # print(json.dumps(data))
-        item = WtProjectItem()
-        item['data'] = data
+            item = WtProjectItem()
+            item['data'] = data
+            item['num'] = {'wt_p_1':self.wt_p_1,'wt_w_1':self.wt_w_1,'wt_p_2':self.wt_p_2,'wt_w_2':self.wt_w_2,'wt_v_1':self.wt_v_1,'wt_v_2':self.wt_v_2}
 
-        yield  item
+            yield item
+
+
+
 
