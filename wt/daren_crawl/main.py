@@ -26,39 +26,50 @@ def main():
         tags = get_accountId.get_tags(id)
         get_accountId.parse_tags(tags)
 
-    # for accountId_dict in get_accountId.accountInfo_list:
-    #     contentId_obj = get_contentId(accountId_dict)
-    #     contentId_obj.main()
+    for accountId_dict in get_accountId.accountInfo_list:
+
+        contentId_obj = get_contentId(accountId_dict)
+        contentId_obj.main()
+
+
 
     for accountId_dict in get_accountId.accountInfo_list:
-        getAccountPage_obj = getAccountPage(accountId_dict.get('accountId'))
-        contentId_list = getAccountPage_obj.get_allPage()
 
-        for contentId in contentId_list:
-            if contentId not in sdf:
+        getAccountPage_obj = getAccountPage(accountId_dict.get('accountId'))
+        contentId = getAccountPage_obj.get_allPage()
+
+        if contentId not in sdf and contentId != '':
+            contentId_total_list.append(contentId)
+            sdf.add(contentId)
+
+
+
+
+    while contentId_total_list:
+
+        for contentId in contentId_total_list :
+            tags = get_accountId.get_tags(contentId)
+            get_accountId.parse_tags(tags)
+            # 删除抓取过的contentId
+            contentId_total_list.remove(contentId)
+
+
+        for accountId_dict in get_accountId.accountInfo_list:
+            contentId_obj = get_contentId(accountId_dict)
+            contentId_obj.main()
+
+
+        for accountId_dict in get_accountId.accountInfo_list:
+            getAccountPage_obj = getAccountPage(accountId_dict.get('accountId'))
+            contentId = getAccountPage_obj.get_allPage()
+
+            if contentId not in sdf and contentId != '':
                 contentId_total_list.append(contentId)
                 sdf.add(contentId)
 
+            # 删除抓取过的accountId
+            get_accountId.accountInfo_list.remove(accountId_dict)
 
-    print(len(contentId_total_list))
-
-    # while contentId_total_list:
-    #
-    #     for contentId in contentId_total_list :
-    #         tags = get_accountId.get_tags(contentId)
-    #         get_accountId.parse_tags(tags)
-    #
-    #     for accountId_dict in get_accountId.accountInfo_list:
-    #         getAccountPage_obj = getAccountPage(accountId_dict.get('accountId'))
-    #         contentId_list = getAccountPage_obj.get_allPage()
-    #         for contentId in contentId_total_list:
-    #             if contentId not in sdf:
-    #                 contentId_total_list.append(contentId)
-    #                 sdf.add(contentId)
-    #
-    #     for accountId_dict in get_accountId.accountInfo_list:
-    #         contentId_obj = get_contentId(accountId_dict)
-    #         contentId_obj.main()
 
 
 

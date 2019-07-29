@@ -17,6 +17,7 @@ sdf = ScalableBloomFilter(initial_capacity=100, error_rate=0.001,
 
 
 accountInfo_list = []
+contentId_list = []
 
 
 def stringRandom(n):
@@ -39,8 +40,14 @@ def pare_tagData(data):
         accountInfo_dict = {}
         post = temp.get('data').get('post')
         if post != None:
+            accountId = post.get('accountId')
+            contentId = post.get('contentId')
             accountInfo_dict['accountId'] = post.get('accountId')
             accountInfo_dict['accountName'] = post.get('accountName')
+            if accountId not in sdf:
+                contentId_list.append(contentId)
+
+
         video = temp.get('data').get('video')
         if video != None:
             accountInfo_dict['accountId'] = video.get('accountId')
@@ -140,16 +147,25 @@ if __name__ == '__main__':
     # 根据contentId 得到tags   再取accountId
     # get_tagPage(230014465145)  # 230014465145  231130640992
     # ids = [   200114003706,200114060042,200114096081,200114430910,200114531808,200114615243,200114643142,200116177537,200121395000, 200124226755,200125868186,200130974030,200132697114,200136079822,200136123140,200137472749,200139465639,200140850971,200143332752,200144258360,200144264065,200145758542,200147561048,200154443458,200157418020,200157740087,200159341987,200160031429,200166471761,200179535029,200182149701,200185230195,200186615301,200196583269,200197625560,200200325026,200204262700,200204862751,200206550508,200209373820,200216477763,200218394920,200222598822,200223171265,200229946190 ]
-    ids = [ 232133898914 ]
+
+    tags = get_tags(231808262851)
+    parse_tags(tags)
     num = 1
-    for id in ids :
+    print('len contetnId_list',len(contentId_list))
+    for id in contentId_list:
+
         print(num)
         num += 1
-        tags = get_tags(id)
+        print()
+        tags = get_tags(int(id))
         parse_tags(tags)
+
+    print('len accountInfo_list',len(accountInfo_list))
     for accountInfo_dict in accountInfo_list:
         contentId_obj = get_contentId(accountInfo_dict)
         contentId_obj.main()
+
+
 
 
 

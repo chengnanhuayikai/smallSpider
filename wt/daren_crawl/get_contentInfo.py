@@ -142,7 +142,7 @@ class get_contentId:
                 if temp.get('items') != None:
                     for item in temp.get('items'):
                         items.append(item.get('itemId'))
-        # print(info)
+
 
         if items == [] and feeds != []:
             contentId = feeds[0].get('feedId')
@@ -278,7 +278,7 @@ class get_contentId:
 
 if __name__ == '__main__':
     # 3020335190 2315200564
-    accountId_list = {'accountId':2934922814,'accountName':'kdjskj'}
+    accountId_list = {'accountId':41358922,'accountName':'kdjskj'}
 
     contentId_obj = get_contentId(accountId_list)
     contentId_obj.main()

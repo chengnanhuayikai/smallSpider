@@ -16,7 +16,7 @@ from urllib import parse
 class getAccountPage():
 
     headers = {}
-    contentId_list = []
+    contentId = ''
     t = str(int(time.time() * 1000))
     appKey = '12574478'
 
@@ -69,6 +69,7 @@ class getAccountPage():
         解析page数据
         :return:
         '''
+        print('-------')
         feeds = info.get('data').get('result').get('data')[-1].get('co').get('result').get('data').get('feeds')
         # print(feeds)
         if feeds == []:
@@ -77,10 +78,15 @@ class getAccountPage():
             for content in feeds:
                 if content.get('feedType') == '500' or content.get('feedType') == '504':
                     contentId = content.get('feedId')
-                    self.contentId_list.append(contentId)
+                    temp = self.get_tags(contentId)
+                    if temp == True:
+                        self.contentId = contentId
+                        return False
 
+                    return  True
 
             return True
+
 
 
 
@@ -127,6 +133,44 @@ class getAccountPage():
 
         return json.loads(response.text)
 
+
+
+    def get_tags(self,contentId):
+        '''
+        根据contentId得到 tags
+        :param contentId:
+        :return:
+        '''
+        utdid = ''.join(random.sample(string.ascii_letters + string.digits, 24))
+        v = '1.0'
+        api = "mtop.taobao.beehive.detail.contentservicenewv2"
+        data = {"contentId": str(contentId), "source": "darenhome", "type": "h5",
+                "params": "{\"sourcePageName\":\"darenhome\"}", "business_spm": "", "track_params": ""}
+        headers = {
+            'x-appkey': '21646297',
+            'x-t': str(time.time())[:10],
+            'x-pv': '6.1',
+            'x-sign': 'bbc699b829e42fca253c96e1480b456c',
+            'x-features': '27',
+            'x-location': "119.99023%2C30.275328",
+            'x-ttid': '10005934@taobao_android_8.7.0',
+            'x-utdid': utdid,
+            'x-devid': 'Q8rmBiZW4hbKClMaYgGo0vnNkTXVc3AELqO9d7xp61sH',
+            'x-uid': ''
+        }
+        result = requests.get(
+            'https://api.m.taobao.com/gw/' + api + '/' + v + '/?data=' + parse.quote(json.dumps(data)), headers=headers)
+        # print(result.text)
+        tags = result.json().get('data').get('models').get('tags')
+        if tags == [] or tags == None:
+            return False
+        else:
+            return True
+
+
+
+
+
     def get_allPage(self ):
         '''
         得到所有页数据
@@ -138,15 +182,14 @@ class getAccountPage():
         flag = True
         page = 1
         while flag:
-            if page > 20:
-                break
             info = self.get_accountIdPage(accountId ,page)
             flag = self.get_parseAccountIdPage(info)
+            print(flag)
             page += 1
             # break
 
 
-        return self.contentId_list
+        return self.contentId
 
 
 
@@ -160,5 +203,5 @@ class getAccountPage():
 
 if __name__ == '__main__':
     getAccountPage_obj = getAccountPage(105993661)
-    contentId_list = getAccountPage_obj.get_allPage()
-    print(contentId_list)
+    contentId = getAccountPage_obj.get_allPage()
+    print(contentId)
