@@ -7,7 +7,7 @@ import random
 import json
 import string
 from urllib import parse
-from get_itemDetails import get_rootCategoryId
+from itemDetails import get_rootCategoryId
 from collections import Counter
 
 
@@ -18,8 +18,8 @@ class get_contentId:
     t = str(int(time.time() * 1000))
     appKey = '12574478'
 
-    def __init__(self,accountId_list):
-        self.accountId_list = accountId_list
+    def __init__(self,accountId_dict):
+        self.accountId_dict = accountId_dict
 
 
     def setHeaders(self,html=None):
@@ -153,10 +153,10 @@ class get_contentId:
 
 
 
-
-
         try:
             publishTime = info.get('data').get('result').get('data')[-1].get('co').get('result').get('data').get('feeds')[0].get('publishTime')
+            ti = str(publishTime)[:-3]
+            publishTime = time.strftime('%Y--%m--%d %H:%M:%S', time.localtime(int(ti)))
         except:
             publishTime = ''
 
@@ -214,66 +214,57 @@ class get_contentId:
         写入文件
         :return:
         '''
-        for accountId_dict in self.accountId_list:
-
-            info = self.get_accountIdPage(accountId_dict.get('accountId'))
-            try:
-                info_tuple = self.parse_accountIdPage(info)
-            except:
-                print(json.dumps(info))
-                continue
 
 
-            if info_tuple == None:
-                continue
+        info = self.get_accountIdPage(self.accountId_dict.get('accountId'))
+        try:
+            info_tuple = self.parse_accountIdPage(info)
+        except Exception as e:
+            print(e)
+            print(json.dumps(info))
+            return None
 
-            accountId = accountId_dict.get('accountId')
-            accountName = accountId_dict.get('accountName')
-            fans = info_tuple[0]
-            title = info_tuple[2]
-            typeName = info_tuple[3]
-            desc = info_tuple[4]
-            if info_tuple[1] == '':
-                publishTime = ''
-            else:
-                ti = str(info_tuple[1])[:-3]
-                try:
-                    publishTime = time.strftime('%Y--%m--%d %H:%M:%S', time.localtime(int(ti)))
-                except:
-                    publishTime = ''
 
-            userInfo = str(
-                accountId) + ',' + accountName + ',' + fans + ',' + publishTime + ',' + title + ',' + typeName + ',' + desc + '\n'
-            category_list = []
-            for item in info_tuple[5]:
-                category = get_rootCategoryId(item)
+        if info_tuple == None:
+            return  None
 
-                category_list.append(category)
 
-            if category_list == []:
-                category = ''
-            else:
-                category_counts = Counter(category_list)
-                category = category_counts.most_common(1)[0][0]
+        accountId = self.accountId_dict.get('accountId')
+        accountName = self.accountId_dict.get('accountName')
+        fans = info_tuple[0]
+        title = info_tuple[2]
+        typeName = info_tuple[3]
+        desc = info_tuple[4]
+        publishTime = info_tuple[1]
 
-            # print(accountId)
-            # print(accountName)
-            # print(fans)
-            # print(publishTime)
-            # print(title)
-            # print(typeName)
-            # print(desc)
-            # print(category)
-            if category == None:
-                category = ''
+        category_list = []
+        for item in info_tuple[5]:
+            category = get_rootCategoryId(item)
 
+            category_list.append(category)
+
+        if category_list == []:
+            category = ''
+        else:
+            category_counts = Counter(category_list)
+            category = category_counts.most_common(1)[0][0]
+
+        if category == None:
+            category = ''
+
+        try:
             userInfo = str(
                 accountId) + ',' + accountName + ',' + fans + ',' + publishTime + ',' + title + ',' + typeName + ',' + desc +  ',' +  category + '\n'
             print(userInfo)
 
 
-            with open('微淘达人ID_05.csv', 'a', encoding='Utf8') as f:
+            with open('wtDarenId_01.csv', 'a', encoding='Utf8') as f:
                 f.write(userInfo)
+        except Exception as e:
+            print('-----------------> ')
+            print(e)
+
+
 
 
 
@@ -287,48 +278,13 @@ class get_contentId:
 
 if __name__ == '__main__':
     # 3020335190 2315200564
-    # accountId_list = [{'accountId':2017747453,'accountName':'kdjskj'}]
-    #
-    # contentId_obj = get_contentId(accountId_list)
-    # contentId_obj.main()
-
-
-    accountId_list = []
-    f = open('微淘达人ID.csv','r',encoding='gbk')
-    line = f.readline()
-    while line:
-
-
-        info_list = line.split(',')
-        accountId = info_list[0]
-        accountName = info_list[1]
-        fans = info_list[2]
-        if '万' in fans:
-            # print(''.join(re.findall(r'\d+', fans)) + '0000')
-            fans = ''.join(re.findall(r'\d+', fans)) + '0000'
-
-        line = f.readline()
-
-        if int(fans) < 1000:
-            continue
-
-        accountId_dict = {}
-        accountId_dict['accountId'] = accountId
-        accountId_dict['accountName'] = accountName
-        accountId_list.append(accountId_dict)
-
-
-        line = f.readline()
-        # print(line)
-
-
-
-
-
-    f.close()
+    accountId_list = {'accountId':2934922814,'accountName':'kdjskj'}
 
     contentId_obj = get_contentId(accountId_list)
     contentId_obj.main()
+
+
+
 
 
 

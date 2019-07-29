@@ -29,16 +29,17 @@ def get_pageInfo(url):
 
     response = requests.get(url=url,headers=headers)
     # print(response.text)
-
-    info = re.search('mtopjsonp1\((.*)\)', response.text , re.S).group(1)
-
-    info = json.loads(info)
-
     try:
+
+        info = re.search('mtopjsonp1\((.*)\)', response.text , re.S).group(1)
+
+        info = json.loads(info)
+
+
         rootCategoryId = info.get('data').get('item').get('rootCategoryId')
     except:
-        print('****************************')
-        print(response.text)
+        # print('****************************')
+        # print(response.text)
         return  ''
     category = get_by_id(rootCategoryId)
 
@@ -52,7 +53,7 @@ def get_sign():
     :return:
     '''
     contentId = 231851162423
-    tk = 'a8e73dd2bea9653e0fab791cf9c8206c'
+    tk = 'c2e67e65f682b05a9fe4e74a7797830b'
     data = '{"contentId":"' + str(contentId) + r'","source":"darenhome","type":"h5","params":"{\"sourcePageName\":\"darenhome\"}","business_spm":"a2114l.11283723","track_params":""}'
     t = int(time.time() * 1000)
     strs = tk + "&" + str(t) + "&" + "12574478" + "&" + data
@@ -63,6 +64,7 @@ def get_sign():
 
 
 def get_rootCategoryId(itemId):
+    time.sleep(1)
     '''
     根据生成sign
     调用请求、解析
@@ -87,8 +89,10 @@ def get_rootCategoryId(itemId):
 if __name__ == '__main__':
     # for contentid in [229630290483, 228368239526, 227793649497, 227598244548, 227838151021, 227837503653, 227743510909, 227675433637, 227670865567, 226749668934, 226758215905, 226567297815, 225538526270, 225280428581, 225353489045, 225333843203, 225118276170, 225335667201, 225190733664, 225038731866, 225047943347, 225047851471, 224805546190, 224805134744, 224857143903]:
     #     get_detailsSign(contentid)
+
     category = get_rootCategoryId(522069656055) # 570857669382
     print(category)
+
     # print(get_by_id('50002768'))
 
 
