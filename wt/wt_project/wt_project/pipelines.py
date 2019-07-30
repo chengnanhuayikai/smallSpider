@@ -44,5 +44,6 @@ class WtProjectPipeline(object):
         print('-------------------> ')
         res = self.upload(item['data'])
         print(res.text)
+        print(item)
         print()
         return item

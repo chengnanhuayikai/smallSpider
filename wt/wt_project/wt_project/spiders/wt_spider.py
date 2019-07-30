@@ -95,6 +95,7 @@ class WtSpiderSpider(scrapy.Spider):
                     content_dict['image'] = content.get('images')
                     content_dict['contentId'] = content.get('feedId')
                     content_dict['feedCount'] = content.get('feedCount')
+                    content_dict['duration'] = content.get('duration')
                     content_dict['contentType'] = 'Video'
                     # print(content_dict)
                     self.contentId_list.append(content_dict)
@@ -137,7 +138,7 @@ class WtSpiderSpider(scrapy.Spider):
         response = requests.get(url, headers=self.headers, params=params)
         if "令牌过期" in response.text:
             self.setHeaders()
-            self.get_page(accountId,page)
+            self.get_accountIdPage(accountId,page)
 
 
         return json.loads(response.text)
@@ -497,6 +498,7 @@ class WtSpiderSpider(scrapy.Spider):
             data.get('resources')[0]['commentCount'] = contentInfo_dict.get('feedCount').get('commentCount')
             data.get('resources')[0]['praiseCount'] = contentInfo_dict.get('feedCount').get('praiseCount')
             data.get('resources')[0]['viewCount'] = contentInfo_dict.get('feedCount').get('viewCount')
+            data.get('resources')[0]['duration'] = contentInfo_dict.get('duration')
 
             item = WtProjectItem()
             item['data'] = data
