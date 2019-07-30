@@ -83,7 +83,10 @@ def get_tags(contentId):
     result = requests.get(
         'https://api.m.taobao.com/gw/' + api + '/' + v + '/?data=' + parse.quote(json.dumps(data)), headers=headers)
     # print(result.text)
-    tags = result.json().get('data').get('models').get('tags')
+    try:
+        tags = result.json().get('data').get('models').get('tags')
+    except:
+        return None
     return tags
 
 
